@@ -2,6 +2,7 @@ import face_recognition
 import cv2
 import numpy as np
 import os
+import time
 
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
@@ -14,6 +15,8 @@ import os
 
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
+
+print('Initializing...')
 
 # Load a sample picture and learn how to recognize it.
 obama_image = face_recognition.load_image_file("test.png")
@@ -32,12 +35,53 @@ known_face_names = [
 ]
 
 images_dir = '/home/nvidia/Desktop/images'
-names = os.listdir(images_dir)
-for name in names:
-    image = face_recognition.load_image_file(images_dir+'/'+name)
+files = os.listdir(images_dir)
+for filename in files:
+    image = face_recognition.load_image_file(images_dir+'/'+filename)
     face_encoding = face_recognition.face_encodings(image)[0]
     known_face_encodings.append(face_encoding)
-    known_face_names.append(name.split('.')[0])
+    known_face_names.append(filename.split('.')[0])
+
+frame_id = 0
+frames_memorized = 20
+frames_count_th = 5
+persons_found = {}
+found_times = {}
+time_th = 300
+results = [[]]*frames_memorized
+
+def update_frames_count(person_id):
+    if person_id not in persons_found:
+        persons_found[person_id] = 1
+    else:
+        persons_found[person_id] += 1
+
+
+def alert(person_id):
+    name = 'Unknown' if person_id == -1 else known_face_names[person_id]
+    print('{} located'.format(name))
+
+
+def mark_as_found(person_id):
+    if person_id not in found_times:
+        found_times[person_id] = time.time()
+        alert(person_id)
+    else:
+        found_time = found_times[person_id]
+        if time.time() - found_time > time_th:
+            alert(person_id)
+        found_times[person_id] = time.time()
+
+def update_results(result, frame_id):
+    old_frame_results = results[frame_id]
+    results[frame_id] = result
+    for person_id in result:
+        update_frames_count(person_id)
+        if persons_found[person_id] >= frames_count_th:
+            mark_as_found(person_id)
+
+    for person_id in old_frame_results:
+        persons_found[person_id] -= 1
 
 # Initialize some variables
 face_locations = []
@@ -45,6 +89,9 @@ face_encodings = []
 face_names = []
 process_this_frame = True
 scale = 2
+
+print('Initialization complete')
+
 while True:
     # Grab a single frame of video
     ret, frame = video_capture.read()
@@ -62,6 +109,7 @@ while True:
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         face_names = []
+        frame_results = set([])
         for face_encoding in face_encodings:
             # See if the face is a match for the known face(s)
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.52)
@@ -77,8 +125,13 @@ while True:
             best_match_index = np.argmin(face_distances)
             if matches[best_match_index]:
                 name = known_face_names[best_match_index]
+                frame_results.add(best_match_index)
+            else:
+                frame_results.add(-1)
 
             face_names.append(name)
+        frame_id = (frame_id + 1) % frames_memorized
+        update_results(frame_results, frame_id)
 
     process_this_frame = not process_this_frame
 
