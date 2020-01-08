@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 import time
+import server
 
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
@@ -15,8 +16,7 @@ import time
 
 # Get a reference to webcam #0 (the default one)
 
-
-video_capture = cv2.VideoCapture(-1)
+video_capture = cv2.VideoCapture(0)
 
 print('Initializing...')
 
@@ -44,14 +44,6 @@ known_face_names = [
 #    known_face_encodings.append(face_encoding)
 #    known_face_names.append(name.split('.')[0])
 
-images_dir = '/home/nvidia/Desktop/images'
-files = os.listdir(images_dir)
-for filename in files:
-    image = face_recognition.load_image_file(images_dir+'/'+filename)
-    face_encoding = face_recognition.face_encodings(image)[0]
-    known_face_encodings.append(face_encoding)
-    known_face_names.append(filename.split('.')[0])
-
 frame_id = 0
 frames_memorized = 20
 frames_count_th = 5
@@ -69,6 +61,7 @@ def update_frames_count(person_id):
 
 def alert(person_id):
     name = 'Unknown' if person_id == -1 else known_face_names[person_id]
+    server.newApprovedVisitor(name)
     print('{} located'.format(name))
 
 
@@ -103,6 +96,8 @@ scale = 2
 print('Initialization complete')
 
 while True:
+
+    server.emit('onApprovedVisitor', 'lalala')
     # Grab a single frame of video
     ret, frame = video_capture.read()
 
@@ -132,7 +127,7 @@ while True:
 
             # Or instead, use the known face with the smallest distance to the new face
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-            best_match_index = np.argmin(face_distances)
+            # best_match_index = np.argmin(face_distances)
             if matches[best_match_index]:
                 name = known_face_names[best_match_index]
                 frame_results.add(best_match_index)

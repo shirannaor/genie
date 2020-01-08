@@ -1,20 +1,17 @@
-import eventlet
-import socketio
+from flask import Flask
+from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 
-sio = socketio.Server()
-app = socketio.WSGIApp(sio)
+app = Flask(__name__)
+CORS(app)
+# app.config['SECRET_KEY'] = 'fuck_peretz!'
+socket = SocketIO(app, cors_allowed_origins='*')
 
-@sio.on("connect")
-def connect(sid,environ):
-    print ("connect", sid)
+@socket.on('connect')
+def on_connect():
+    print("peretz is gay")
+    emit('work', 'import numpy as np\nnp.array([1, 3, 5])\nnp.version.version')
 
-@sio.on("newApprovedVisitor")
-def msg(sid,data):
-    print ("msg", data)
 
-@sio.on("disconnect")
-def disconnect(sid,environ):
-    print ("disconnect", sid)
-
-if __name__ == '__main__':
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+print('running app')
+socket.run(app)

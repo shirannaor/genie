@@ -79,6 +79,6 @@ export default class VisitorsList extends React.Component {
   }
 
   _onApprovedVisitor() {
-    // TODO
+    console.log("woohooooooo arrived motherfucker!!")
   }
 }
