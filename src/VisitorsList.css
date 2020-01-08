@@ -1,0 +1,8 @@
+.visitors-list {
+  width: 40vw;
+  color: black;
+  background-color: whitesmoke;
+}
+.rt-th.rt-resizable-header.-cursor-pointer:focus {
+  outline: none !important;
+}
