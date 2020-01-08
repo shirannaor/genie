@@ -1,3 +1,5 @@
+import json
+
 import face_recognition
 import cv2
 import numpy as np
@@ -18,29 +20,9 @@ video_capture = cv2.VideoCapture(0)
 
 print('Initializing...')
 
-# Load a sample picture and learn how to recognize it.
-obama_image = face_recognition.load_image_file("test.png")
-obama_face_encoding = face_recognition.face_encodings(obama_image)[0]
-
-# Load a second sample picture and learn how to recognize it.
-# biden_image = face_recognition.load_image_file("biden.jpg")
-# biden_face_encoding = face_recognition.face_encodings(biden_image)[0]
-
-# Create arrays of known face encodings and their names
-known_face_encodings = [
-    obama_face_encoding
-]
-known_face_names = [
-    "Barack Obama"
-]
-
-images_dir = '/home/nvidia/Desktop/images'
-files = os.listdir(images_dir)
-for filename in files:
-    image = face_recognition.load_image_file(images_dir+'/'+filename)
-    face_encoding = face_recognition.face_encodings(image)[0]
-    known_face_encodings.append(face_encoding)
-    known_face_names.append(filename.split('.')[0])
+known_face_encodings = np.load('encoding.npy', allow_pickle=False)
+with open('names.json') as names:
+    known_face_names = json.load(names)
 
 frame_id = 0
 frames_memorized = 20
@@ -105,7 +87,7 @@ while True:
     # Only process every other frame of video to save time
     if process_this_frame:
         # Find all the faces and face encodings in the current frame of video
-        face_locations = face_recognition.face_locations(rgb_small_frame, model="cnn")
+        face_locations = face_recognition.face_locations(rgb_small_frame)
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         face_names = []
