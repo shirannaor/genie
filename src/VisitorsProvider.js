@@ -18,7 +18,7 @@ export default class VisitorsProvider {
     socket.on('connect', () => console.log('connected to the server!'));
 
     socket.on('newUnknownVisitor', data => this.approvedVisitorCallback(data));
-    socket.on('newApprovedVisitor', data => this.unknownVisitorCallback(data));
+    socket.on('newApprovedVisitor', data => console.log(data));
 
     socket.on('disconnect', () => console.log('disconnect'));
 
