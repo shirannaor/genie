@@ -17,6 +17,17 @@ app = Flask(__name__)
 CORS(app)
 socket = SocketIO(app, cors_allowed_origins='*')
 
+found_times = {}
+frames_count_th = 5
+persons_found = {}
+time_th = 300
+
+print('Initializing...')
+
+known_face_encodings = np.load('encoding.npy', allow_pickle=False)
+with open('names.json') as names:
+    known_face_names = json.load(names)
+
 def update_frames_count(person_id):
     if person_id not in persons_found:
         persons_found[person_id] = 1
@@ -25,7 +36,7 @@ def update_frames_count(person_id):
 
 def alert(person_id):
     name = 'Unknown' if person_id == -1 else known_face_names[person_id]
-    server.newApprovedVisitor(name)
+    socket.emit('newApprovedVisitor', name)
     print('{} located'.format(name))
 
 def mark_as_found(person_id):
@@ -52,20 +63,8 @@ def update_results(results, result, frame_id):
 def background_thread():
     video_capture = cv2.VideoCapture(0)
 
-    print('Initializing...')
-    known_face_encodings = []
-    known_face_names = []
-
-    # known_face_encodings = np.load('encoding.npy', allow_pickle=False)
-    # with open('names.json') as names:
-    #     known_face_names = json.load(names)
-
     frame_id = 0
     frames_memorized = 20
-    frames_count_th = 5
-    persons_found = {}
-    found_times = {}
-    time_th = 300
     results = [[]]*frames_memorized
 
     face_locations = []
@@ -76,7 +75,6 @@ def background_thread():
 
     while True:
         time.sleep(1)
-        socket.emit('newApprovedVisitor', 'lala')
 
         ret, frame = video_capture.read()
 
@@ -105,12 +103,12 @@ def background_thread():
 
                 # Or instead, use the known face with the smallest distance to the new face
                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-                # best_match_index = np.argmin(face_distances)
-                # if matches[best_match_index]:
-                #     name = known_face_names[best_match_index]
-                #     frame_results.add(best_match_index)
-                # else:
-                #     frame_results.add(-1)
+                best_match_index = np.argmin(face_distances)
+                if matches[best_match_index]:
+                    name = known_face_names[best_match_index]
+                    frame_results.add(best_match_index)
+                else:
+                    frame_results.add(-1)
 
                 face_names.append(name)
 
