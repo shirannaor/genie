@@ -6,7 +6,6 @@ from threading import Thread
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
-
 import json
 import face_recognition
 import cv2
@@ -18,7 +17,7 @@ CORS(app)
 socket = SocketIO(app, cors_allowed_origins='*')
 
 found_times = {}
-frames_count_th = 5
+frames_count_th = 3
 persons_found = {}
 time_th = 300
 
@@ -74,7 +73,7 @@ def background_thread():
     scale = 2
 
     while True:
-        time.sleep(1)
+        time.sleep(0.25)
 
         ret, frame = video_capture.read()
 
@@ -96,10 +95,10 @@ def background_thread():
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.52)
                 name = ""
 
-                # # If a match was found in known_face_encodings, just use the first one.
-                # if True in matches:
-                #     first_match_index = matches.index(True)
-                #     name = known_face_names[first_match_index]
+                # If a match was found in known_face_encodings, just use the first one.
+                if True in matches:
+                    first_match_index = matches.index(True)
+                    name = known_face_names[first_match_index]
 
                 # Or instead, use the known face with the smallest distance to the new face
                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)

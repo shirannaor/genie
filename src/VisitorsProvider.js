@@ -4,9 +4,9 @@ export default class VisitorsProvider {
   unknownVisitorCallback;
   approvedVisitorCallback;
 
-  onUnknownVisitor(cb) {
-    this.unknownVisitorCallback = cb;
-  }
+  // onUnknownVisitor(cb) {
+  //   this.unknownVisitorCallback = cb;
+  // }
 
   onApprovedVisitor(cb) {
     this.approvedVisitorCallback = cb;
@@ -17,13 +17,9 @@ export default class VisitorsProvider {
 
     socket.on('connect', () => console.log('connected to the server!'));
 
-    socket.on('newUnknownVisitor', data => this.approvedVisitorCallback(data));
-    socket.on('newApprovedVisitor', data => console.log(data));
+    // socket.on('newUnknownVisitor', data => this.approvedVisitorCallback(data));
+    socket.on('newApprovedVisitor', data => this.approvedVisitorCallback(data));
 
     socket.on('disconnect', () => console.log('disconnect'));
-
-    // function send(message) {
-    //   socket.send('msg', message);
-    // }
   }
 }
